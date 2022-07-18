@@ -24,18 +24,18 @@ config = {
     # 'WAPI_URL_BASE': 'https://api.meine-bank.ch/v1/accounts',
     # 'WAPI_URL_BASE': 'https://www.theice.com/publicdocs/clear_europe/irmParameters/harmonized/ENERGY_MARGIN_DELIVERY_20220718.CSV',
     # 'WAPI_URL_BASE': 'https://api2.sgx.com/sites/default/files/reports/fxproducts/2022/07/wcm%40sgx_en%4015-Jul-2022%40fsvdate%40US.csv',
-    'DIR_DRYRYN': path('.').parent / 'test_input',
-    'DIR_LOG': path('.').parent / 'log',
-    'DIR_TEMPLATES': path('.').parent / 'templates',  
+    'DIR_DRYRYN': path.cwd().parent / 'test_input',
+    'DIR_LOG': path.cwd().parent / 'log',
+    'DIR_TEMPLATES': path.cwd().parent / 'templates',  
 }
 
-
 logger.debug('Rading configuration from OS ENV and then from .env files')
+
 config = {
     **config,
     **os.environ,  # override loaded values with environment variables
-    **dotenv_values(".env.shared"),  # load shared development variables
-    **dotenv_values(".env.secret"),  # load sensitive variables
+    **dotenv_values(path.cwd().parent / ".env.shared"),  # load shared development variables
+    **dotenv_values(path.cwd().parent / ".env.secret"),  # load sensitive variables
 }
 
 

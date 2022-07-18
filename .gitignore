@@ -1,0 +1,12 @@
+# python exec files
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+.venv
+
+# Django stuff:
+log/*.log
+
+.env.secret

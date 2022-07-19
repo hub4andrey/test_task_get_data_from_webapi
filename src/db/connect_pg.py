@@ -12,7 +12,8 @@ import pandas as pd
 import pendulum
 
 # own modules and libs:
-from utils.init_params import config
+from utils.init_params import opts
+
 
 # Get root (__main__) logger:
 logger = logging.getLogger(f"__main__.{__name__}")
@@ -28,15 +29,17 @@ def connect_engine():
     """
 
     logger.debug('Build SQLAlchemy engine')
-    config['DB_CONSTR'] = 'postgresql://{user}:{passwd}@{host}:{port}/{db_name}'.format(
-            user=config['DB_USER'],
-            passwd=config['DB_PASS'],
-            host=config['DB_HOST'],
-            port=config['DB_PORT'],
-            db_name=config['DB_NAME']
+
+    opts.db_constr = 'postgresql://{user}:{passwd}@{host}:{port}/{db_name}'.format(
+            user=opts.db_user,
+            passwd=opts.db_pass,
+            host=opts.db_host,
+            port=opts.db_port,
+            db_name=opts.db_name
             )
 
-    return create_engine(config['DB_CONSTR'], echo=False, connect_args={'options': '-c search_path={}'.format(config['DB_SCHEMA'])})
+    return create_engine(opts.db_constr, echo=False, connect_args={'options': '-c search_path={}'.format('dashboards')})
+    
 
 try:
     engine = connect_engine()
@@ -46,8 +49,10 @@ except SQLAlchemyError as e:
     logger.error(f"{e}")
     sys.exit(1)
 
+
 def get_engine():
     return engine
+
 
 def get_session():
     return session

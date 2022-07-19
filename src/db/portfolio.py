@@ -5,6 +5,7 @@ import logging
 import pandas as pd
 
 # own modules and libs:
+from utils.init_params import opts
 from .connect_pg import get_engine, get_session
 from utils.datetime import validate_date_from_date_to
 
@@ -101,11 +102,26 @@ def add_portfolio_return(df = pd.DataFrame()):
     logger.debug(f"Get data for INSERT:")
     logger.debug(df.head(5))
 
+    # try:
+    #     df = df[['customer_id','portfolio_return','date']]
+    #     with engine.begin() as conn:
+    #         df.to_sql('portfolio_return', conn, if_exists='append', schema='dashboards', index=False, chunksize=1000)
+    #         if opts.dryrun:
+    #              conn.rollback()
+    #              logger.debug("Success on INSERT simulation into portfolio_return. Rolling back")
+
+    #         logger.debug("Success on INSERT into portfolio_return")
     try:
         df = df[['customer_id','portfolio_return','date']]
-        with engine.begin() as conn:
+        with engine.connect() as conn:
+            tran = conn.begin()
             df.to_sql('portfolio_return', conn, if_exists='append', schema='dashboards', index=False, chunksize=1000)
-            logger.debug("Success on INSERT into portfolio_return")
+            if opts.dryrun:
+                 tran.rollback()
+                 logger.debug("Success on INSERT simulation into portfolio_return. Rolling back")
+            else:
+                tran.commit()
+                logger.debug("Success on INSERT into portfolio_return")
     except Exception as e:
         logger.error(f"{e}")
 

@@ -7,7 +7,7 @@ import pandas as pd
 import pendulum
 
 # own modules and libs:
-from utils.init_params import config
+from utils.init_params import opts, ALL_TASKS
 from utils.init_logger import set_logger
 
 import db.portfolio as db_portfolio
@@ -19,18 +19,17 @@ import web_api.asset as web_asset
 from report import portfolio as report_portfoliod
 from report import postoffice
 
-
-
-
 # =============================
 # Logger. Configuration
 # =============================
 logger = logging.getLogger(__name__)
 # set default level:
-logger = set_logger(logger, console_level = logging.DEBUG, file_level = logging.INFO, dir_log = config['DIR_LOG'])
+logger = set_logger(logger, console_level = logging.DEBUG, file_level = logging.INFO, dir_log = opts.dir_log)
 
 
 logger.info(f'START')
+
+
 
 def get_portfolio_return_update():
     """
@@ -55,7 +54,7 @@ def get_asset_plublication_update():
     db_asset.add_asset_scalar_publication(df)
 
 
-def send_email_report_portfolio_daily_update():
+def send_email_report_portfolio_monthly_return_update():
     """Send report by email
 
     The output from monthly portfolio return calculation is sent via email. It should have the following structure:
@@ -77,13 +76,22 @@ def send_email_report_portfolio_daily_update():
     )
 
 
-logger.info(f'COMPLETE')
+
 
 
 if __name__ == '__main__':
-    get_portfolio_return_update()
-    get_asset_plublication_update()
-    send_email_report_portfolio_daily_update()
+
+    for task in opts.tasks_list:
+        if not task in ALL_TASKS.keys():
+            print(f"Skip unknown task {task}")
+        else:
+            eval(f"{ALL_TASKS[task]}()")
+    
+    # get_portfolio_return_update()
+    # get_asset_plublication_update()
+    # send_email_report_portfolio_monthly_return_update()
+
+    logger.info(f'COMPLETE')
 
 
 

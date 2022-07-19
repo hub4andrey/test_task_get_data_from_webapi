@@ -2,7 +2,7 @@
 
 ## What is it?
 
-This service automates analytics team's work process by collecting up-to-date market data from api.meine-bank.ch and store it in DataWarehouse.
+This service is collecting up-to-date market data from api.meine-bank.ch and store it in DataWarehouse.
 
 ## Main Features
 
@@ -23,10 +23,13 @@ where:
 
 I.e. the monthly return is the product of (1 plus the daily returns of the month), minus 1.
 
-
 ---
 
 ## Installation from sources
+
+
+
+Clone repository and prepare Python environment:
 
     git clone https://github.com/hub4andrey/test_task_get_data_from_webapi.git
 
@@ -38,6 +41,14 @@ I.e. the monthly return is the product of (1 plus the daily returns of the month
 
     python -m pip install --upgrade pip
     pip install -r requirements.txt
+
+In project root directory find and duplicate file `.env.secret_example` . Rename it to `.env.secret`. Modify the content.
+
+Run PostgreSQL server in Docker container:
+
+    docker-compose up
+
+Run the server.
 
     cd src
     python -m main

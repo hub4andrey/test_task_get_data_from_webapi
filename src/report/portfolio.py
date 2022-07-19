@@ -9,14 +9,14 @@ import pandas as pd
 import pendulum
 
 # own modules and libs:
-from utils.init_params import config
+from utils.init_params import opts
 
 # Get root (__main__) logger:
 logger = logging.getLogger(f"__main__.report.{__name__}")
 
 
 # Initiate Jinja2 templates loader:
-dir_templates_for_email = path(config['DIR_TEMPLATES']) / 'email'
+dir_templates_for_email = path(opts.dir_templates) / 'email'
 env = Environment(loader=FileSystemLoader(dir_templates_for_email))
 # Load template for email:
 template = env.get_template("email_body.html")

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres
+    build: apps/pgdb
+    container_name: pg_container
+    
+    restart: always
+
+    environment:
+      # "POSTGRES_USER" This variable will create the specified user with superuser power **and a database** with the same name. 
+      # If it is not specified, then the default user of "postgres" will be used.
+      # POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      # "POSTGRES_DB" This optional environment variable can be used to define a different name for the default database 
+      # that is created when the image is first started. If **it is not specified**, then the **value of POSTGRES_USER will be used**.
+      # POSTGRES_DB: test_db
+      PROJECT_DATABASE: dwarehouse
+      PROJECT_USERGROUP: writers
+      DB_USER_NAME: user1
+      DB_USER_PASSWORD: user1
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./sql:/tmp/sql_script
+      - ./sql/initdb:/docker-entrypoint-initdb.d
+      # ask docker-compose to manage the volume in a name called "db" which is further added to be a local driver:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - apps
+# https://towardsdatascience.com/how-to-run-postgresql-and-pgadmin-using-docker-3a6a8ae918b5
+#
+
+networks:
+  apps:
+    driver: bridge
+
+volumes:
+  pg_data:
+    driver: local

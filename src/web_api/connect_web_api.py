@@ -6,7 +6,7 @@ import sys
 import requests
 
 # own modules and libs:
-from utils.init_params import config
+from utils.init_params import opts
 
 
 logger = logging.getLogger(f"__main__.web_api.{__name__}")
@@ -21,7 +21,7 @@ def get_scontent_from_url(url):
     try:
         logger.debug(f'Going to GET data from {url}')
         with requests.Session() as s:
-            s.auth = (config['WAPI_USER'], config['WAPI_PASS'])
+            s.auth = (opts.api1_user_name, opts.api1_user_pass)
             s.headers.update({'accept': 'text/csv'})
 
             resp =  s.get(url, verify=False)

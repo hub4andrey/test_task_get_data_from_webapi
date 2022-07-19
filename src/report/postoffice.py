@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 
 
 # own modules and libs:
-from utils.init_params import config
+from utils.init_params import opts
 
 # Get root (__main__) logger:
 logger = logging.getLogger(f"__main__.report.{__name__}")
@@ -25,7 +25,7 @@ def send(to=None, subject='report', body=None, html=None):
     # msg.set_content("This is eamil message")
     msg = MIMEMultipart("alternative")
     msg['Subject'] = subject
-    msg['From'] = config['SMTP_USER_NAME']
+    msg['From'] = opts.smtp_user_name
     msg['To'] = to
         
     part = MIMEText(str(html), "html")
@@ -34,10 +34,14 @@ def send(to=None, subject='report', body=None, html=None):
     # send email
     try:
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(config['SMTP_SERVER'], 465, context=context) as smtp:
+        with smtplib.SMTP_SSL(opts.smtp_host, 465, context=context) as smtp:
             # smtp.set_debuglevel(1)
             logger.debug(msg.as_string())
-            smtp.login(config['SMTP_USER_NAME'], config['SMTP_USER_PASS'])
-            smtp.send_message(msg)
+            if opts.dryrun:
+                logger.debug('e-mail has been composed succesffully. Do nothing in dryrun mode')
+            else:
+                logger.debug('e-mail has been composed succesffully. Sending it out')
+                smtp.login(opts.smtp_user_name, opts.smtp_user_pass)
+                smtp.send_message(msg)
     except Exception as e:
         logger.error(e)

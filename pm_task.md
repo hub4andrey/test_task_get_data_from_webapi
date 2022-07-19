@@ -58,8 +58,8 @@ The `API specs` are as follows:
 
 - HTTP GET request to https://api.meine-bank.ch/v1/accounts
 - HTTP basic authentication with:
-  - user ID analytics@inyova.com
-  - password abc123
+  - user ID user_name@mail.com
+  - password some_pass
 - Request header: Accept: text/csv
 
 The `CSV file contains daily data` and `one record per customer and (business) day`. It has the `following structure`:

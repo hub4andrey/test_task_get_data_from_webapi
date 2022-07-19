@@ -9,6 +9,7 @@ from sqlalchemy import Column, Integer, String, BigInteger, Numeric, Date, DateT
 from sqlalchemy import or_, and_
 
 # own modules and libs:
+from utils.init_params import opts
 from .connect_pg import get_engine, get_session
 from utils.datetime import validate_date_from_date_to
 
@@ -186,11 +187,26 @@ def add_asset_scalar_publication(df = pd.DataFrame()):
     logger.debug(f"Get data for INSERT:")
     logger.debug(df.head(5))
 
+    # try:
+    #     df = df[['datetime','asset_id','price']]
+    #     with engine.begin() as conn:
+    #         df.to_sql('prices', conn, if_exists='append', schema='dashboards', index=False, chunksize=1000)
+    #         if opts.dryrun:
+    #              conn.rollback()
+    #              logger.debug("Success on INSERT simulation into prices. Rolling back")
+
+    #         logger.debug("Success on INSERT into prices")
     try:
         df = df[['datetime','asset_id','price']]
-        with engine.begin() as conn:
+        with engine.connect() as conn:
+            tran = conn.begin()
             df.to_sql('prices', conn, if_exists='append', schema='dashboards', index=False, chunksize=1000)
-            logger.debug("Success on INSERT into prices")
+            if opts.dryrun:
+                 tran.rollback()
+                 logger.debug("Success on INSERT simulation into prices. Rolling back")
+            else:
+                tran.commit()
+                logger.debug("Success on INSERT into prices")
     except Exception as e:
         logger.error(f"{e}")
 

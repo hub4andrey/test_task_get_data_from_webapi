@@ -1,13 +1,13 @@
 # Native Python libs:
 import logging
-import io
+import io, sys
 
 # 3rd party Python libs:
 import pandas as pd
 
 # own modules and libs:
 from .connect_web_api import get_scontent_from_url
-from utils.init_params import config
+from utils.init_params import opts
 from utils.datetime import validate_date_from_date_to
 
 
@@ -25,8 +25,8 @@ def get_portfolio_return_from_api():
     import web_api.asset as portfolio
     df = portfolio.get_portfolio_return_from_api()
     """
-    if config['DRYRUN']:
-        file_with_csv_test_content = config['DIR_DRYRYN'] / 'web_api_portfolio_return.csv' 
+    if opts.dryrun:
+        file_with_csv_test_content = opts.dir_test_data / 'web_api_portfolio_return.csv' 
         logger.debug(f'start in DRYRUN mode. Reading data from {file_with_csv_test_content}')
         df = pd.read_csv(file_with_csv_test_content, sep=' ')
         logger.debug(df.head(5))
@@ -34,9 +34,17 @@ def get_portfolio_return_from_api():
         return df
 
     else:
-        url = config['WAPI_URL_BASE']
+        url = opts.api1_base_url
         logger.debug(f'Reading data from {url}')
-        df = pd.read_csv(io.StringIO(get_scontent_from_url(url)))
-        logger.debug(df.head(5))
 
-        return df
+        try:
+            df = pd.read_csv(io.StringIO(get_scontent_from_url(url)))
+            logger.debug(df.head(5))
+
+            return df
+        
+        except Exception as e:
+            logger.error(f"Wrong data set received from web API: {e}")
+            sys.exit(1)
+
+        

@@ -1,57 +1,67 @@
 version: '3.8'
 
 services:
-  db:
+  pgdb:
     image: postgres
-    build: apps/pgdb
-    container_name: pg_container
-    
-    restart: always
-
+    # build: apps/pgdb
+    container_name: inyova_pgdb
+    restart: 
+      always
     environment:
-      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
-      POSTGRES_DB: test_db
-      PROJECT_DATABASE: dwarehouse
-      PROJECT_USERGROUP: writers
-      DB_USER_NAME: user1
-      DB_USER_PASSWORD: user1
+      DB_NAME: dwarehouse
+      DB_GROUP_R: readers
+      DB_GROUP_W: writers
+      DB_GEN_USER_NAME: user1
+      DB_GEN_USER_PASSWORD: user1
+      DB_HOST: 172.22.0.2
     ports:
       - "5432:5432"
     volumes:
-      - ./sql_script:/tmp/sql_script
-      # ask docker-compose to manage the volume in a name called "db" which is further added to be a local driver:
-      - db:/var/lib/postgresql/data
+      - ./apps/pgdb/sql/initdb:/docker-entrypoint-initdb.d
+      - pg_data:/var/lib/postgresql/data
     networks:
-      - apps
-  pgadmin:
-    container_name: pgadmin4_container
-    image: dpage/pgadmin4
-    restart: always
+      inyova-static:
+        ipv4_address: 172.22.0.2
+
+#   pgadmin:
+#     container_name: inyova_pgadmin
+#     image: dpage/pgadmin4
+#     restart: always
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: admin@admin.com
+#       PGADMIN_DEFAULT_PASSWORD: root
+#     ports:
+#       - "5050:80"
+#     depends_on:
+#       - pgdb
+#     networks:
+#       inyova-static:
+#         ipv4_address: 172.22.0.3
+# # https://towardsdatascience.com/how-to-run-postgresql-and-pgadmin-using-docker-3a6a8ae918b5
+
+
+  backend_app1:
+    container_name: inyova_webscrapper
+    # image: ubuntu:latest
+    build: apps/backendapp1
+    depends_on:
+      - pgdb
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: root
-    ports:
-      - "5050:80"
+      DB_HOST: 172.22.0.2
     networks:
-      - apps
-  # web:
-  #   #restart: always
-  #   image: python:3.9-alpine
-  #   ports:
-  #     - "5051:80"
-  #   volumes:
-  #     - .:/tmp/app
-  #   depends_on:
-  #     - db
-  #   #command: 
-# https://towardsdatascience.com/how-to-run-postgresql-and-pgadmin-using-docker-3a6a8ae918b5
-#
+      inyova-static:
+        ipv4_address: 172.22.0.4
+
+
 
 networks:
-  apps:
+  inyova-static:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.22.0.0/16
 
 volumes:
-  db:
+  pg_data:
     driver: local

@@ -38,11 +38,12 @@ config = {
 }
 
 
-def prepare_parent_parser():
+
+def prepare_parent_parser(config):
     """
     Instantiate ArgumentParser. Update args default values by "config" dict cotent.
 
-    IMPORTANT
+    IMPORTANT !!
     Below you have to describe ALL configuration parameters used by this service.
     If you add any parameter into OS ENV or into ".env" files, but not describe below, these "unknown" parameters
     will be ignored.
@@ -64,11 +65,11 @@ def prepare_parent_parser():
     parent_parser.add_argument("--dryrun", action=argparse.BooleanOptionalAction, help="Read data from CSV instead of URL. Roll transactions back after making them (no SQL changes effectively)", default=False)
     # parent_parser.add_argument("--dump_to_file", action=argparse.BooleanOptionalAction, help="Activate saving of queried data in data_folder", default=False))
    
-    parent_parser.add_argument("--db_host", type=str, help="DataBase hostname", default=None)
+    parent_parser.add_argument("--db_host", type=str, help="DataBase hostname", default="localhost")
     parent_parser.add_argument("--db_port", type=int, help="DataBase port", default=5432)
     parent_parser.add_argument("--db_user", type=str, help="DataBase user name", default=None)
     parent_parser.add_argument("--db_pass", type=str, help="DataBase user password", default=None)
-    parent_parser.add_argument("--db_name", type=str, help="DataBase name", default=None)
+    parent_parser.add_argument("--db_name", type=str, help="DataBase name", default="dwarehouse")
 
     parent_parser.add_argument("--smtp_host", type=str, help="SMTP server host name or IP address", default=None)
     parent_parser.add_argument("--smtp_user_name", type=str, help="SMTP server user name", default=None)
@@ -84,26 +85,28 @@ def prepare_parent_parser():
     parent_parser.add_argument("--dir_templates", type=str, help="Directory with report templates", default=project_dir / 'templates')
     parent_parser.add_argument("--dir_test_data", type=str, help="Directory with test data set", default=project_dir / 'test_input')
 
-    # Update args default values by "config" dict cotent.
+    # Step 2 and 3. Create join dictionary from hardcoded config values, OS ENV values, values from .env files:
+    config = {
+        **config,
+        # **{k:v for k,v in os.environ.items() if k in config},  # Takes ENV variables if name in hardcoded "config". Overwrite hardcoded value.
+        **os.environ,
+        **dotenv_values(path.cwd().parent.resolve() / ".env.shared"),  # load shared development variables
+        **dotenv_values(path.cwd().parent.resolve() / ".env.secret"),  # load sensitive variables
+    }
+
+    # Update args default values. Set them to values from "config".
     parent_args, parent_sub_args = parent_parser.parse_known_args(['--help'])
     for arg in config.keys():
         # print(f"processing {arg}")
         if arg.lower() in parent_args:
-            # print(f"found {arg} to be update: from {parent_parser.get_default(arg.lower())} to {config[arg]}")
+            logger.debug(f"found {arg} to be update: from {parent_parser.get_default(arg.lower())} to {config[arg]}")
             parent_parser.set_defaults(**{arg.lower():config[arg]})
     # parent_args, parent_sub_args = parent_parser.parse_known_args(['--help'])
-    # print(vars(parent_args))
+    logger.debug("="*20 + " PARENT ARG " + "="*20)
+    logger.debug(vars(parent_args))
   
     return parent_parser
 
-
-# Step 2 and 3. Create single dictionary from hardcoded config values, OS ENV values, values from .env files:
-config = {
-    **config,
-    **{k:v for k,v in os.environ.items() if k in config},  # Takes ENV variables if name in hardcoded "config". Overwrite hardcoded value.
-    **dotenv_values(path.cwd().parent.resolve() / ".env.shared"),  # load shared development variables
-    **dotenv_values(path.cwd().parent.resolve() / ".env.secret"),  # load sensitive variables
-}
 
 
 def validate_critical_arguments(opts):
@@ -142,13 +145,14 @@ def set_configuration():
 
     # Only now instantiate ArgumentParser to be proposed for user:
     parser = argparse.ArgumentParser(
-        parents=[prepare_parent_parser()],
+        parents=[prepare_parent_parser(config)],
         description="This service is collecting up-to-date market data from api.meine-bank.ch and store it in DataWarehouse")
 
     # Get user's input:
     opts = parser.parse_args()
     # print(opts.tasks_list)
-    # print(vars(opts))
+    logger.debug("="*20 + " FINAL ARG " + "="*20)
+    logger.debug(vars(opts))
 
     validate_critical_arguments(opts)
 

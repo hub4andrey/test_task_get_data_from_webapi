@@ -1,4 +1,4 @@
-# 
+# InYoVa web scrapper and DataWarehouse
 
 ## What is it?
 
@@ -31,24 +31,64 @@ I.e. the monthly return is the product of (1 plus the daily returns of the month
 
 Clone repository and prepare Python environment:
 
+    cd your_project_dir
     git clone https://github.com/hub4andrey/test_task_get_data_from_webapi.git
 
+In project root directory find and duplicate file `.env.secret_example` . Rename it to `.env.secret`. Modify the content:
+
+    cd your_project_dir
+    cd test_task_get_data_from_webapi/apps/backendapp1
+    vim .env.secret_example
+    mv .env.secret_example .env.secret
+
+Run Docker containers:
+
+    cd your_project_dir
     cd test_task_get_data_from_webapi
+    docker-compose -f docker-compose.yml up
 
-    pyenv local 3.9.12
-    python -m venv ./.venv
-    source .venv/bin/activate
+## How to configure tasks schedule
 
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
+### Either before run containers:
 
-In project root directory find and duplicate file `.env.secret_example` . Rename it to `.env.secret`. Modify the content.
+    cd your_project_dir
+    cd test_task_get_data_from_webapi/apps/backendapp1/cron
+    # modify schedule:
+    vim crontab_user.cron
 
-Run PostgreSQL server in Docker container:
+Then run Docker containers (see above).
 
-    docker-compose up
+### OR when container is running:
 
-Run the server.
+    # get into container:
+    docker exec -ti inyova_webscrapper bash
+    cd cron
+    # modify schedule:
+    vim crontab_user.cron
+    # apply cron changes:
+    crontab crontab_user.cron
+    service cron reload
 
+## How to run task individually
+
+How to:
+
+    # get into container:
+    docker exec -ti inyova_webscrapper bash
     cd src
-    python -m main
+    # get help:
+    python -m main --help
+    # run tast (see --run section):
+    python -m main --run get_portfolio_return get_asset_plublication email_portfolio_monthly_return
+
+## How to run unit tests
+
+How to:
+
+    # get into container:
+    docker exec -ti inyova_webscrapper bash
+    cd src
+    # get help:
+    python -m unittest
+
+enjoy.

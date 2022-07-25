@@ -199,6 +199,7 @@ CREATE TABLE IF NOT EXISTS $SCHEMA_DATA.silo_asset_price_scalar_cache (
 	created_by_name text,
 	created_by_ip_address inet DEFAULT inet_client_addr(),
 	created_at_cet TIMESTAMPTZ DEFAULT current_timestamp,
+	-- ISODoW : The day of the week as Monday (1) to Sunday (7)
 	rotating_period int not null DEFAULT (extract(isodow from statement_timestamp() )),
 	status text,
 	msg text,
@@ -253,11 +254,14 @@ AS
 DECLARE
 	_suffix_insert int := (NEW.rotating_period);
 	_dow_index_truncate int := ((NEW.rotating_period+1) % 7)::int;
-	_suffix_truncate text := (array['mon','tue','wed','thu','fri','sat','sun'])[_dow_index_truncate];
+	_suffix_truncate text := (array['mon','tue','wed','thu','fri','sat','sun'])[_dow_index_truncate + 1];
 	_rows_count int;
 BEGIN
-	EXECUTE 'select count(*) FROM $SCHEMA_DATA.silo_asset_price_scalar_cache_' || _suffix_truncate INTO _rows_count;
-	IF coalesce(_rows_count, 0) > 0 THEN
+	-- ISODoW : The day of the week as Monday (1) to Sunday (7)
+	-- Postgres arrays are 1-based by default.
+	-- RAISE NOTICE '_suffix_insert: %, _dow_index_truncate: %, _suffix_truncate: % ', _suffix_insert, _dow_index_truncate, _suffix_truncate;
+	EXECUTE 'select coalesce(count(*), 0) FROM $SCHEMA_DATA.silo_asset_price_scalar_cache_' || _suffix_truncate INTO _rows_count;
+	IF _rows_count > 0 THEN
 		SET lock_timeout = '1s';
 		EXECUTE 'truncate $SCHEMA_DATA.silo_asset_price_scalar_cache_'|| _suffix_truncate ;
 	END IF;
@@ -399,9 +403,12 @@ AS
 DECLARE
 	_suffix_insert int := (NEW.rotating_period);
 	_dow_index_truncate int := ((NEW.rotating_period+1) % 7)::int;
-	_suffix_truncate text := (array['mon','tue','wed','thu','fri','sat','sun'])[_dow_index_truncate];
+	_suffix_truncate text := (array['mon','tue','wed','thu','fri','sat','sun'])[_dow_index_truncate + 1];
 	_rows_count int;
 BEGIN
+	-- ISODoW : The day of the week as Monday (1) to Sunday (7)
+	-- Postgres arrays are 1-based by default.
+	-- RAISE NOTICE '_suffix_insert: %, _dow_index_truncate: %, _suffix_truncate: % ', _suffix_insert, _dow_index_truncate, _suffix_truncate;
 	EXECUTE 'select count(*) FROM $SCHEMA_DATA.silo_portfolio_return_cache_' || _suffix_truncate INTO _rows_count;
 	IF coalesce(_rows_count, 0) > 0 THEN
 		SET lock_timeout = '1s';

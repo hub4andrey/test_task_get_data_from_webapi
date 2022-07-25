@@ -15,7 +15,11 @@ RUN chmod u+s /usr/sbin/cron && \
     touch container.env
 
 COPY  . .
+RUN mkdir log
 RUN chown -R $GEN_USER:$GEN_USER $DIR_PROJECT_ROOT
+RUN chmod u+w $DIR_PROJECT_ROOT/log
+
+
 
 USER $GEN_USER
 WORKDIR $DIR_PROJECT_ROOT

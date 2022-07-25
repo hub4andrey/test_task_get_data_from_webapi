@@ -7,28 +7,27 @@ import pandas as pd
 import pendulum
 
 # own modules and libs:
-from utils.init_params import opts, ALL_TASKS
 from utils.init_logger import set_logger
 
 import db.portfolio as db_portfolio
 import db.asset as db_asset
+from db.connect_pg import test_connection_to_db
 
-import web_api.portfolio as web_portfolio
-import web_api.asset as web_asset
+# import web_api.portfolio as web_portfolio
+# import web_api.asset as web_asset
+from web_api.connect_web_api import WebAPI
 
-from report import portfolio as report_portfoliod
-from report import postoffice
+from report.portfolio import EmailBodyWithOneTable
+from report.postoffice import PostOffice
 
 # =============================
 # Logger. Configuration
 # =============================
+from utils.init_params import ALL_TASKS, opts
+
 logger = logging.getLogger(__name__)
 # set default level:
-logger = set_logger(logger, console_level = logging.DEBUG, file_level = logging.INFO, dir_log = opts.dir_log)
-
-
-logger.info(f'START')
-
+logger = set_logger(logger, console_level = logging.INFO, file_level = logging.INFO, dir_log = opts.dir_log)
 
 
 def get_portfolio_return_update():
@@ -38,7 +37,8 @@ def get_portfolio_return_update():
     Write output inoto DataBase.
     """
     logger.debug("Start get_portfolio_return_update")
-    df = web_portfolio.get_portfolio_return_from_api()
+    req = WebAPI()
+    df = req.get_portfolio_return_from_api()
     db_portfolio.add_portfolio_return(df)
 
 
@@ -49,7 +49,8 @@ def get_asset_plublication_update():
     Write output inoto DataBase.
     """
     logger.debug("Start get_asset_plublication_update")
-    df = web_asset.get_asset_publications_from_api()
+    req = WebAPI()
+    df = req.get_asset_publications_from_api()
     print(df)
     db_asset.add_asset_scalar_publication(df)
 
@@ -65,21 +66,29 @@ def send_email_report_portfolio_monthly_return_update():
     2022-02 1245 0.00024
     ...
     """
-    report_html = report_portfoliod.daily_update_1( 
-        df_portfolio=db_portfolio.get_portfolio_return_monthly(customer_id=1)
-        )
 
-    postoffice.send(
-        to='4_andreych@mail.ru',
-        subject='Portfolio. Daily update',
-        html=report_html
-    )
+    email_1_table = EmailBodyWithOneTable()
+    body_html=email_1_table.get_body_html(
+            df=db_portfolio.get_portfolio_return_monthly(customer_id=1), 
+            h1_text="Portfolio return")
 
+    office = PostOffice(
+        email_to="4_andreych@mail.ru", 
+        email_subject="Portfolio. Daily update", 
+        body_html=body_html)
+    office.send_email()
 
 
 
 
 if __name__ == '__main__':
+
+    
+    logger.info(f'START')
+
+    # Test connection to DB. On error, terminate the service:
+    test_connection_to_db()
+
 
     for task in opts.tasks_list:
         if not task in ALL_TASKS.keys():
@@ -92,61 +101,5 @@ if __name__ == '__main__':
     # send_email_report_portfolio_monthly_return_update()
 
     logger.info(f'COMPLETE')
-
-
-
-# print(db_portfolio.get_portfolio_return())
-# print(db_portfolio.get_portfolio_return_monthly(customer_id=1, date_from=pendulum.datetime(2022, 2, 1), date_to=pendulum.datetime(2022, 3, 1)))
-
-# df = web_portfolio.get_portfolio_return_from_api()
-# print(df.to_html())
-
-# df = pd.DataFrame({
-#     "customer_id": [1, 1, 1],
-#     "portfolio_return":[0.2,0.3,0.4],
-#     "date":["2022-06-01","2022-06-02","2022-06-03"]
-#     })
-# db_portfolio.add_portfolio_return(df)
-
-
-
-
-# print(db_asset.get_asset_daily_values_by_id(asset_id=1, date_from=pendulum.datetime(2022, 2, 1), date_to=pendulum.datetime(2022, 3, 1)))
-# print(db_asset.get_asset_daily_values_by_id(asset_id=2))
-# print(db_asset.get_asset_daily_values_by_id())
-# print(db_asset.get_asset_daily_values_by_id(asset_id=1, date_from=pendulum.today().subtract(months=6),date_to='2022-10-10') )
-# )
-
-# print(db_asset.get_asset_hourly_avg_values_by_name())
-# print(db_asset.get_asset_hourly_avg_values_by_name(asset_name='equity_msft'))
-# print(db_asset.get_asset_hourly_avg_values_by_name(asset_name='equity_msft', attribute_name='price;day;close'))
-# print(db_asset.get_asset_hourly_avg_values_by_name(asset_name='equity_msft', attribute_name='price;day;close', date_from=pendulum.today().subtract(months=6),date_to='2022-10-10'))
-
-
-# print(db_asset.get_asset_catalog(asset_name='aa'))
-# print(db_asset.get_asset_attribute(asset_name='aap'))
-# print(db_asset.get_asset_attribute(attribute_name='close'))
-
-
-# df = web_asset.get_asset_publications_from_api()
-# print(df)
-
-# df = pd.DataFrame({
-#         "asset_id": [1, 1, 1],
-#         "price":[101,102,103],
-#         "datetime":["2022-06-01 19:00:00","2022-06-02 19:00:00","2022-06-03 19:00:00"]
-#         })
-# db_asset.add_asset_scalar_publication(df)
-
-
-
-
-
-
-
-
-
-
-
 
 

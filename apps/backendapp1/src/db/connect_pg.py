@@ -37,8 +37,17 @@ def connect_engine():
             port=opts.db_port,
             db_name=opts.db_name
             )
-
+    logger.debug(f"Connecting to PostgreSQL host:{opts.db_host}, port:{opts.db_port}, db:{opts.db_name}, under user: {opts.db_user}")
     return create_engine(opts.db_constr, echo=False, connect_args={'options': '-c search_path={}'.format('dashboards')})
+    
+def test_connection_to_db():
+    try:
+        engine.connect()
+        
+    except Exception as e:
+        logger.error(f"Can't connect to PostgreSQL host:{opts.db_host}, port:{opts.db_port}, db:{opts.db_name}, under user: {opts.db_user}")
+        logger.error(f"Terminating.")
+        sys.exit(1)
     
 
 try:

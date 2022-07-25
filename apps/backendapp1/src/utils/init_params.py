@@ -56,7 +56,7 @@ def prepare_parent_parser(config):
     parent_parser.add_argument("--run", metavar="task", 
         type=str, nargs="+", dest="tasks_list", 
         help=f"space separated list of tasks to be executed. Currently available tasks: {tasks_list}", 
-        default="['get_portfolio_return', 'get_asset_plublication']")
+        default=['get_portfolio_return', 'get_asset_plublication'])
 
 
     parent_parser.add_argument('--version', action='store_true', help='Print out service version. Do nothing')
@@ -126,22 +126,26 @@ def validate_critical_arguments(opts):
     
     if opts.db_host is None:
         logging.error('DB host is not set')
+        logger.error(f"Terminating.")
         sys.exit(1)
     if opts.db_port is None:
         logging.warn('DB port not set, using default 5432')
         pg_port = 5432
     if opts.db_name is None:
         logging.error('DB name is not set')
+        logger.error(f"Terminating.")
         sys.exit(1)
     if opts.db_user is None:
         logging.error('DB user is not set')
+        logger.error(f"Terminating.")
         sys.exit(1)
     if opts.db_pass is None:
         logging.error('DB password is not set')
+        logger.error(f"Terminating.")
         sys.exit(1)
 
 
-def set_configuration():
+def set_configuration(args=None):
 
     # Only now instantiate ArgumentParser to be proposed for user:
     parser = argparse.ArgumentParser(
@@ -149,16 +153,19 @@ def set_configuration():
         description="This service is collecting up-to-date market data from api.meine-bank.ch and store it in DataWarehouse")
 
     # Get user's input:
-    opts = parser.parse_args()
+    # (opts, some_list) = parser.parse_known_args(args)
+    opts = parser.parse_args(args)
     # print(opts.tasks_list)
     logger.debug("="*20 + " FINAL ARG " + "="*20)
     logger.debug(vars(opts))
 
     validate_critical_arguments(opts)
 
+    is_ture = [1, '1', 'True', 'true', 'TRUE', True]
+    opts.dryrun = True if opts.dryrun in is_ture else False
+    # opts.dump_to_file = True if opts.dump_to_file in is_ture else False
+
     return opts
 
-opts = set_configuration()
-is_ture = [1, '1', 'True', 'true', 'TRUE', True]
-opts.dryrun = True if opts.dryrun in is_ture else False
-# opts.dump_to_file = True if opts.dump_to_file in is_ture else False
+opts= set_configuration()
+

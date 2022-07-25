@@ -4,9 +4,10 @@ import logging
 # 3rd party Python libs:
 import pandas as pd
 import pendulum
-from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, Integer, String, BigInteger, Numeric, Date, DateTime
 from sqlalchemy import or_, and_
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.dialects import postgresql
 
 # own modules and libs:
 from utils.init_params import opts
@@ -101,6 +102,7 @@ class Asset(Base):
 
 def get_asset_daily_values_by_id(asset_id=None, date_from=None, date_to=None):
     """SELECT from dashboards.prices
+    "Price" shows assets with attribute "Day Close Price" only.
     optionally set limits to asset_id and published_at_cet columns.
 
     return pandas.DataFrame()
@@ -119,9 +121,11 @@ def get_asset_daily_values_by_id(asset_id=None, date_from=None, date_to=None):
     if date_to:
         filters.append(Asset.datetime <= date_to)
     if filters:
+        logger.debug(session.query(Asset).filter(and_(*filters)).statement.compile(compile_kwargs={"literal_binds": True}))
         df = pd.read_sql(
             session.query(Asset).filter(and_(*filters)).statement,session.bind)
     else:
+        logger.debug(session.query(Asset).statement.compile(compile_kwargs={"literal_binds": True}))
         df = pd.read_sql(
             session.query(Asset).statement,session.bind)
     

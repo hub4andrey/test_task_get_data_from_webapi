@@ -2,7 +2,7 @@
 SHELL=/bin/bash
 BASH_ENV=/srv/app/backend_app1/container.env
 
-* * * * * /srv/app/backend_app1/sh_script/get_asset_plublication.sh
+* * * * * /srv/app/backend_app1/sh_script/get_asset_publication.sh
 * * * * * /srv/app/backend_app1/sh_script/get_portfolio_return.sh
 * * * * * /srv/app/backend_app1/sh_script/email_portfolio_monthly_return.sh
 

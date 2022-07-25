@@ -125,3 +125,4 @@ def add_portfolio_return(df = pd.DataFrame()):
     except Exception as e:
         logger.error(f"{e}")
 
+

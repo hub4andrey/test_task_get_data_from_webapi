@@ -1,7 +1,7 @@
 import logging
 from logging.handlers import RotatingFileHandler
 
-def set_logger(logger, console_level = logging.DEBUG, file_level = logging.INFO, dir_log = None):
+def set_logger(logger, console_level = logging.INFO, file_level = logging.INFO, dir_log = None):
 
     # set permitted lowest level:
     logger.setLevel(logging.DEBUG)
